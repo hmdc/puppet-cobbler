@@ -66,9 +66,11 @@ class cobbler::config(
   $ensure,
   $cobbler_config,
   $cobbler_modules_config,
+  $cobbler_authorized_usr,
   $config_path,
   $config_file,
   $config_modules,
+  $config_users,
 ){
   # Validation
   validate_absolute_path(
@@ -109,6 +111,12 @@ class cobbler::config(
     ensure      => $ensure,
     config_file => "${config_path}/${config_modules}",
     options     => $cobbler_modules_config,
+  }
+
+  cobbler::config::ini { 'users.conf':
+    ensure      => $ensure,
+    config_file => "${config_path}/${config_users}",
+    options     => $cobbler_authorized_usr,
   }
 
 }

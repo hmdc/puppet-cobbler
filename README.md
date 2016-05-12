@@ -1,4 +1,4 @@
-# cobbler [![Build Status](https://travis-ci.org/spacedog/puppet-cobbler.svg)](https://travis-ci.org/spacedog/puppet-cobbler)
+# cobbler
 
 #### Table of Contents
 
@@ -17,6 +17,19 @@
 This module manages installation and configuration cobbler itself as well as
 cobbler objects such as distros, profiles, systems and repos.
 
+## HMDC Changelog
+
+Forked version includes
+* ``cobbler::service::dhcpd`` class to manage DHCP, optional.
+* Optional installation of ``cobbler-web`` package. 
+* Defined types to manage kickstart templates, kickstart snippets, and
+  service templates.
+* ``cobbler::service`` also notifies ``cobbler sync``
+* ``cobbler::selinux`` class instantiated automatically for hosts using
+  SeLinux, relies on [https://github.com/jfryman/puppet-selinux]
+* Manages user authorization for web ui via ``cobbler_authorized_usr``
+  parameter in main class ``cobbler``
+
 ## Module Description
 
 Module installs cobbler servers. Module performs cobbler configuration,
@@ -34,6 +47,8 @@ types for cobbler objects:
 
 + Module installs (including dependencies):
   * cobbler
+  * cobbler_web (if specified)
+  * dhcpd (if specified)
   * syslinux
   * syslinux-tftpboot
 
@@ -150,10 +165,20 @@ That module contains:
     * cobbler_repo
     * cobbler_profile
     * cobbler_system
+ + Defined types:
+    * cobbler::template
+    * cobbler::kickstart_template
 
 ## Limitations
 
 + osfamily => RedHat
+
+## SeLinux
+In forked version, SeLinux rules are automatically produced by
+``cobbler::selinux``
+
+Minimal SeLinux rules necessary are reproduced below:
+
 + if getenforce == Enforcing
   * setsebool -P httpd_can_network_connect_cobbler 1
   * setsebool -P httpd_serve_cobbler_files 1

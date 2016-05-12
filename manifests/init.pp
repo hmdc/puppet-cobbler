@@ -16,7 +16,7 @@
 # [*cobbler_modules_config*]
 #   Hash of cobbler modules configuration. This hash is
 #   merged with the default_modules_config hash from params class.
-#   Exapmple:
+#   Example:
 #     cobbler_modules_config => {
 #       section1            => {
 #         option1 => value1,
@@ -30,6 +30,14 @@
 #   Type: Hash
 #   Default: {}
 #
+# [*cobbler_authorized_usr*]
+#   Users granted administrative permissions in the Cobbler web
+#   interface.
+#   Example:
+#     cobbler_authorized_usr => {
+#       'esarm'              => "\"\"",
+#     }
+#
 # [*ensure*]
 #   The state of puppet resources within the module.
 #
@@ -42,6 +50,12 @@
 #
 #   Type: String or Array
 #   Default: check cobbler::params::package
+#
+# [*web package*]
+#   The package name or array of packages that provides cobbler web ui.
+#
+#   Type: String or Array
+#   Default: check cobbler::params::cobbler_web
 #
 # [*package_ensure*]
 #   The state of the package.
@@ -69,6 +83,20 @@
 #   Type: boolean or string
 #   Values: true, false, manual, mask
 #   Default: true
+#
+# [*install_dhcp*]
+#   Whether to install and manage DHCP
+#   
+#   Type: boolean
+#   Values: true, false
+#   Default: false
+#
+# [*install_web*]
+#   Whether to install the Cobbler Web RPM
+#   
+#   Type: boolean
+#   Values: true, false
+#   Default: false
 #
 # [*config_path*]
 #   The absolute path where cobbler configuration files reside. This to prepend
@@ -111,11 +139,16 @@
 # === Authors
 #
 # Anton Baranov <abaranov@linuxfoundation.org>
+# Evan Sarmiento <esarmien@g.harvard.edu>
 class cobbler (
   $cobbler_config         = {},
   $cobbler_modules_config = {},
+  $cobbler_authorized_usr = {},
+  $install_web            = false,
+  $install_dhcp           = false,
   $ensure                 = $::cobbler::params::ensure,
   $package                = $::cobbler::params::package,
+  $web_package            = $::cobbler::params::web_package,
   $package_ensure         = $::cobbler::params::package_ensure,
   $service                = $::cobbler::params::service,
   $service_ensure         = $::cobbler::params::service_ensure,
@@ -123,8 +156,10 @@ class cobbler (
   $config_path            = $::cobbler::params::config_path,
   $config_file            = $::cobbler::params::config_file,
   $config_modules         = $::cobbler::params::config_modules,
+  $config_users           = $::cobbler::params::config_users,
   $default_cobbler_config = $::cobbler::params::default_cobbler_config,
   $default_modules_config = $::cobbler::params::default_modules_config,
+  $default_authorized_usr = $::cobbler::params::default_authorized_usr,
 ) inherits ::cobbler::params {
 
   # Validation
@@ -141,7 +176,8 @@ class cobbler (
   validate_string(
     $service,
     $config_file,
-    $config_modules
+    $config_modules,
+    $config_users,
   )
   validate_absolute_path(
     $config_path,
@@ -150,6 +186,7 @@ class cobbler (
     $default_cobbler_config,
     $cobbler_config,
     $cobbler_modules_config,
+    $cobbler_authorized_usr,
   )
 
   if is_string($service_enable) {
@@ -185,14 +222,35 @@ class cobbler (
     $default_modules_config,
     $cobbler_modules_config
   )
+  $_cobbler_authorized_usr = merge(
+    $default_authorized_usr,
+    $cobbler_authorized_usr)
+
+  if ($::selinux) {
+    include cobbler::selinux
+    Class['cobbler::selinux'] ~>
+    Class['cobbler::service']
+  }
+
+  if ($install_dhcp) {
+    include cobbler::service::dhcpd
+  }
+
+  if ($install_web) {
+    package { $web_package:
+      ensure => 'present',
+    }
+  }
 
   class{'cobbler::config':
     ensure                 => $ensure,
     cobbler_config         => $_cobbler_config,
     cobbler_modules_config => $_cobbler_modules_config,
+    cobbler_authorized_usr => $_cobbler_authorized_usr,
     config_path            => $config_path,
     config_file            => $config_file,
     config_modules         => $config_modules,
+    config_users           => $config_users,
   }
 
   class{'cobbler::service':
@@ -201,9 +259,7 @@ class cobbler (
     service_enable => $service_enable,
   }
 
-  Anchor['cobbler::begin'] ->
   Class['cobbler::install'] ->
   Class['cobbler::config'] ~>
-  Class['cobbler::service'] ->
-  Anchor['cobbler::end']
+  Class['cobbler::service']
 }

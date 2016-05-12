@@ -13,16 +13,23 @@ class cobbler::params {
   $ensure                 = 'present'
   $package                = [
                               'cobbler',
+                              'xinetd',
+                              'tftp-server',
+                              'tftp',
                               'syslinux',
-                              'syslinux-tftpboot'
+                              'syslinux-tftpboot',
+                              'pykickstart',
+                              'python-ldap'
                             ]
   $package_ensure         = 'installed'
+  $web_package            = 'cobbler-web'
   $service                = 'cobblerd'
   $service_ensure         = 'running'
   $service_enable         = true
   $config_path            = '/etc/cobbler'
   $config_file            = 'settings'
   $config_modules         = 'modules.conf'
+  $config_users           = 'users.conf'
   # Default config you have just after cobbler is installed
   # Just load yaml as cobbler use yaml format for $config_file
   $default_cobbler_config = {
@@ -141,5 +148,12 @@ class cobbler::params {
     'dns'            => {'module' => 'manage_bind'},
     'dhcp'           => {'module' => 'manage_isc'},
     'tftpd'          => {'module' => 'manage_in_tftpd'},
+  }
+
+  $default_authorized_usr = {
+    'admin'     => {
+      'cobbler' => '""',
+      'admin'   => '""',
+    }
   }
 }

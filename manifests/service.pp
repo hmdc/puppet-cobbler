@@ -1,6 +1,6 @@
 # == Class cobbler:service
 #
-# Manages cobbler service
+# Manages cobbler service, runs cobbler sync.
 #
 # === Parameters
 #
@@ -27,6 +27,7 @@
 # == Authors
 #
 # Anton Baranov <abaranov@linuxfoundation.org>
+# Evan Sarmiento <esarmien@g.harvard.edu>
 class cobbler::service (
   $service,
   $service_ensure,
@@ -46,8 +47,16 @@ class cobbler::service (
   } else {
     validate_bool($service_enable)
   }
-  service {$service:
+
+  service { $service:
     ensure => $service_ensure,
     enable => $service_enable,
+  } ~>
+  exec { 'cobbler sync':
+    user        => 'root',
+    group       => 'root',
+    refreshonly => true,
+    command     => '/usr/bin/cobbler sync',
   }
+
 }

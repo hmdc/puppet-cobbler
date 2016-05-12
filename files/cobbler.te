@@ -1,0 +1,36 @@
+module HMDC-cobbler 1.0;
+
+require {
+  type cobblerd_t;
+  type cert_t;
+  type dhcp_etc_t;
+  type etc_t;
+  type modules_conf_t;
+  type modules_dep_t;
+  type modules_object_t;
+  type rpm_var_cache_t;
+  type rpm_var_lib_t;
+  class dir { write remove_name add_name read search open create getattr };
+  class file { write create unlink read getattr open rename setattr };
+  class capability { net_admin net_raw };
+  class rawip_socket { getopt create };
+}
+#============= cobblerd_t ==============
+allow cobblerd_t cert_t:dir { write remove_name add_name };
+allow cobblerd_t cert_t:file { write create unlink };
+allow cobblerd_t dhcp_etc_t:dir { write add_name };
+allow cobblerd_t dhcp_etc_t:file create;
+allow cobblerd_t etc_t:file write;
+allow cobblerd_t modules_conf_t:dir { read search open };
+allow cobblerd_t modules_conf_t:file { read getattr open };
+allow cobblerd_t modules_dep_t:file { read getattr open };
+allow cobblerd_t modules_object_t:dir search;
+allow cobblerd_t modules_object_t:file { read open };
+
+allow cobblerd_t rpm_var_cache_t:dir { search read create write getattr remove_name open add_name };
+allow cobblerd_t rpm_var_cache_t:file { rename create unlink open setattr };
+
+allow cobblerd_t rpm_var_lib_t:dir { write search create add_name };
+allow cobblerd_t rpm_var_lib_t:file open;
+allow cobblerd_t self:capability { net_admin net_raw };
+allow cobblerd_t self:rawip_socket { getopt create };

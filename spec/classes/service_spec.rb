@@ -21,20 +21,29 @@ describe('cobbler::service') do
   end
 
   context 'with default parameters from init' do
-  let (:params) {
-    {
-      'service'        => 'cobbler',
-      'service_ensure' => 'running',
-      'service_enable' => true,
+    let (:params) {
+      {
+        'service'        => 'cobbler',
+        'service_ensure' => 'running',
+        'service_enable' => true,
+      }
     }
-  }
-  it { should contain_service('cobbler').with(
-    {
-      'ensure' => 'running',
-      'enable' => true,
+
+    it { should contain_exec('cobbler sync').with(
+      'user'        => 'root',
+      'group'       => 'root',
+      'refreshonly' => true,
+      'command'     => '/usr/bin/cobbler sync' ).that_subscribes_to(
+        'Service[cobbler]')
     }
-  )
-  }
+
+    it { should contain_service('cobbler').with(
+      {
+        'ensure' => 'running',
+        'enable' => true,
+      }
+    )
+    }
  
   end
 end
