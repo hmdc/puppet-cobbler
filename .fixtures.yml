@@ -3,7 +3,7 @@ fixtures:
 #  forge_modules:
 #    stdlib: "puppetlabs/stdlib"
   repositories:
-    stdlib: "git://github.com/puppetlabs/puppetlabs-stdlib.git"
+    stdlib: "git@github.com:puppetlabs/puppetlabs-stdlib.git"
     selinux:
       repo: "git@github.com:jfryman/puppet-selinux.git"
       ref: "v0.2.2"
